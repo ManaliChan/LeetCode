@@ -1,29 +1,99 @@
+//Solution by disjoint set
+
+class DisjointSet {
+public:
+
+    vector<int> parent, size;
+
+    DisjointSet(int n)
+    {
+        parent.resize(n);
+        size.resize(n,1);
+
+        for(int i=0;i<n;i++)
+            parent[i]=i;
+    }
+
+    int findpar(int node)
+    {
+        if(parent[node]==node)
+            return node;
+
+        return parent[node]=findpar(parent[node]);
+    }
+
+    void unite(int x,int y)
+    {
+        int px=findpar(x);
+        int py=findpar(y);
+
+        if(px==py) return;
+
+        if(size[px]<size[py])
+        {
+            parent[px]=py;
+            size[py]+=size[px];
+        }
+        else
+        {
+            parent[py]=px;
+            size[px]+=size[py];
+        }
+    }
+};
+
 class Solution {
 public:
 
-    int dissolve(vector<vector<int>>& grid, int i, int j){
-        if(i<0 || j<0 || i>=grid.size() || j>=grid[0].size()){
-            return 0;
-        }
-        if(!grid[i][j]){
-            return 0;
-        }
-        grid[i][j]=0;
-        return (1 + dissolve(grid, i, j+1)+ dissolve(grid, i, j-1)+ dissolve(grid, i+1, j)+ dissolve(grid, i-1, j));
-    }
-
     int maxAreaOfIsland(vector<vector<int>>& grid) {
-        int m=grid.size();
-        int n=grid[0].size();
-        int ans=0;
-        for(int i=0;i<m;i++){
-            for(int j=0;j<n;j++){
-                if(grid[i][j]){
-                    int temp=dissolve(grid, i, j);
-                    ans=max( temp, ans);
+
+        int n=grid.size();
+        int m=grid[0].size();
+
+        DisjointSet ds(n*m);
+
+        int dr[]={-1,0,1,0};
+        int dc[]={0,1,0,-1};
+
+        for(int i=0;i<n;i++)
+        {
+            for(int j=0;j<m;j++)
+            {
+                if(grid[i][j]==0) continue;
+
+                int node=i*m+j;
+
+                for(int k=0;k<4;k++)
+                {
+                    int nr=i+dr[k];
+                    int nc=j+dc[k];
+
+                    if(nr>=0 && nr<n && nc>=0 && nc<m &&
+                       grid[nr][nc]==1)
+                    {
+                        int adj=nr*m+nc;
+                        ds.unite(node,adj);
+                    }
                 }
             }
         }
+
+        unordered_map<int,int> freq;
+        int ans = 0;
+
+        for(int i = 0; i < n; i++)
+        {
+            for(int j = 0; j < m; j++)
+            {
+                if(grid[i][j] == 1)
+                {
+                    int root = ds.findpar(i * m + j);
+                    freq[root]++;
+                    ans = max(ans, freq[root]);
+                }
+            }
+        }
+
         return ans;
     }
 };
